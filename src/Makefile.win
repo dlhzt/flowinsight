@@ -1,0 +1,56 @@
+CC		=	g++
+
+OPTIONS		=	-g -Wall
+COMPOPTS	= 	$(OPTIONS) -c -o
+LINKOPTS	=	$(OPTIONS) -o
+
+MTOPTIONS	=	-g -Wall -D_REENTRANT
+MTCOMPOPTS	= 	$(MTOPTIONS) -c -o
+MTLINKOPTS	=	$(MTOPTIONS) -o
+
+INCLUDE		=	-I../publib -I../tocci -I$(ORACLE_HOME)/oci/include -I$(ORACLE_HOME)/rdbms/public
+LIBPATH		=	-L../publib -L../tocci -L$(ORACLE_HOME)/bin
+	
+FLOWINSIGHT_PATH	= ..
+BINARY_PATH	=	$(FLOWINSIGHT_PATH)/bin
+INI_PATH	=	$(FLOWINSIGHT_PATH)/conf
+
+DB_LIB		= 	-ltocci -loci
+NET_LIB 	=	-lws2_32
+SYS_LIB		=	-lm
+MT_LIB		=
+MY_LIB		=	-lzhaopub
+LIBS		=   $(NET_LIB) $(DB_LIB) $(MY_LIB) $(SYS_LIB) $(MT_LIB)
+
+OBJS		=	dboperator.o flowcollector.o flowdal.o
+
+
+all: flowdal flowsp flowsend flowdebug
+
+clean:
+	rm -rf *.o 
+install: all flowinsight.conf
+	mv flowdal flowsp flowd flowstat flowsend flowdebug ../bin
+	cp flowinsight.conf ../conf
+flowdal: $(OBJS)
+	$(CC) $(MTLINKOPTS) flowdal $(OBJS) $(LIBPATH) $(LIBS)
+flowsp: flowsp.o
+	$(CC) $(MTLINKOPTS) flowsp flowsp.o $(LIBPATH) $(LIBS)
+flowsend: flowsend.o
+	$(CC) $(LINKOPTS) flowsend flowsend.o $(LIBPATH) $(NET_LIB)
+flowdebug: flowdebug.o
+	$(CC) $(LINKOPTS) flowdebug flowdebug.o $(LIBPATH) $(NET_LIB)
+
+
+flowdal.o: flowdal.hpp flowdal.cpp
+	$(CC) $(MTCOMPOPTS) flowdal.o $(INCLUDE) flowdal.cpp
+dboperator.o: dboperator.hpp dboperator.cpp
+	$(CC) $(MTCOMPOPTS) dboperator.o $(INCLUDE) dboperator.cpp
+flowcollector.o: flowcollector.hpp flowcollector.cpp
+	$(CC) $(MTCOMPOPTS) flowcollector.o $(INCLUDE) flowcollector.cpp
+flowsp.o: flowsp.hpp flowsp.cpp
+	$(CC) $(COMPOPTS) flowsp.o $(INCLUDE) flowsp.cpp
+flowsend.o: flowform.hpp flowsend.cpp
+	$(CC) $(COMPOPTS) flowsend.o $(INCLUDE) flowsend.cpp
+flowdebug.o: flowdebug.hpp flowdebug.cpp
+	$(CC) $(COMPOPTS) flowdebug.o $(INCLUDE) flowdebug.cpp

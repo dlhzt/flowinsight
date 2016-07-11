@@ -1,0 +1,64 @@
+CC		=	g++
+
+OPTIONS		=	-g -Wall -DHPUX
+COMPOPTS	= 	$(OPTIONS) -c -o
+LINKOPTS	=	$(OPTIONS) -o
+
+MTOPTIONS	=	-g -Wall -D_REENTRANT -DHPUX
+MTCOMPOPTS	= 	$(MTOPTIONS) -c -o
+MTLINKOPTS	=	$(MTOPTIONS) -o
+
+INCLUDE		=	-I../publib -I../tocci -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/rdbms/public
+LIBPATH		=	-L../publib -L../tocci -L$(ORACLE_HOME)/lib32
+
+FLOWINSIGHT_PATH	= ..
+BINARY_PATH	=	$(FLOWINSIGHT_PATH)/bin
+INI_PATH	=	$(FLOWINSIGHT_PATH)/conf
+
+DB_LIB		= 	-ltocci -lclntsh
+NET_LIB 	=	
+SYS_LIB		=	-lrt -lm
+MT_LIB		=	-lpthread
+MY_LIB		=	-lzhaopub
+LIBS		=   $(NET_LIB) $(DB_LIB) $(MY_LIB) $(SYS_LIB) $(MT_LIB)
+
+OBJS		=	dboperator.o flowcollector.o flowdal.o
+
+
+all: flowd flowdal flowsp flowstat flowsend flowdebug
+
+clean:
+	rm -rf *.o 
+install: all flowinsight.conf
+	mv flowdal flowsp flowd flowstat flowsend flowdebug ../bin
+	cp flowinsight.conf ../conf
+flowdal: $(OBJS)
+	$(CC) $(MTLINKOPTS) flowdal $(OBJS) $(LIBPATH) $(LIBS)
+flowsp: flowsp.o
+	$(CC) $(MTLINKOPTS) flowsp flowsp.o $(LIBPATH) $(LIBS)
+flowd: flowd.o 
+	$(CC) $(LINKOPTS) flowd flowd.o $(LIBPATH) $(MY_LIB) $(SYS_LIB)
+flowstat: flowstat.o
+	$(CC) $(LINKOPTS) flowstat flowstat.o $(LIBPATH) $(MY_LIB) $(SYS_LIB)
+flowsend: flowsend.o
+	$(CC) $(LINKOPTS) flowsend flowsend.o $(LIBPATH) $(NET_LIB) -lrt
+flowdebug: flowdebug.o
+	$(CC) $(LINKOPTS) flowdebug flowdebug.o $(LIBPATH) $(NET_LIB) -lrt
+
+
+flowdal.o: flowdal.hpp flowdal.cpp
+	$(CC) $(MTCOMPOPTS) flowdal.o $(INCLUDE) flowdal.cpp
+dboperator.o: dboperator.hpp dboperator.cpp
+	$(CC) $(MTCOMPOPTS) dboperator.o $(INCLUDE) dboperator.cpp
+flowcollector.o: flowcollector.hpp flowcollector.cpp
+	$(CC) $(MTCOMPOPTS) flowcollector.o $(INCLUDE) flowcollector.cpp
+flowsp.o: flowsp.hpp flowsp.cpp
+	$(CC) $(COMPOPTS) flowsp.o $(INCLUDE) flowsp.cpp
+flowd.o: flowd.hpp flowd.cpp
+	$(CC) $(COMPOPTS) flowd.o $(INCLUDE) flowd.cpp
+flowstat.o: flowstat.hpp flowstat.cpp
+	$(CC) $(COMPOPTS) flowstat.o $(INCLUDE) flowstat.cpp
+flowsend.o: flowform.hpp flowsend.cpp
+	$(CC) $(COMPOPTS) flowsend.o $(INCLUDE) flowsend.cpp
+flowdebug.o: flowdebug.hpp flowdebug.cpp
+	$(CC) $(COMPOPTS) flowdebug.o $(INCLUDE) flowdebug.cpp
